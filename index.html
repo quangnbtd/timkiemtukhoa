@@ -3,238 +3,448 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Công Cụ Từ Khóa Shopee (Demo)</title>
+    <title>Thêm Từ Khóa Demo</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
             margin: 0;
             padding: 20px;
-            background-color: #f4f4f4;
-            color: #333;
+            font-size: 14px;
         }
 
-        .container {
-            max-width: 800px;
+        .keyword-tool-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1200px;
             margin: auto;
-            background: #fff;
+            background-color: #fff;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .left-panel, .right-panel {
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .left-panel {
+            flex: 2; /* Takes 2/3 of the space */
+            background-color: #fff;
+        }
+
+        .right-panel {
+            flex: 1; /* Takes 1/3 of the space */
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
         }
 
         h1, h2 {
-            color: #e8491d; /* Màu cam đặc trưng của Shopee */
-            text-align: center;
+            color: #1f2937;
+            margin-top: 0;
+        }
+        h1 { font-size: 20px; font-weight: 600; margin-bottom: 20px; }
+        h2 { font-size: 16px; font-weight: 600; margin-bottom: 10px; }
+
+        .input-group {
+            position: relative;
             margin-bottom: 20px;
         }
 
-        .search-section {
-            display: flex;
-            margin-bottom: 20px;
+        .input-group input[type="text"] {
+            width: calc(100% - 40px);
+            padding: 10px 30px 10px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
         }
-
-        #seedKeywordInput {
-            flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px 0 0 4px;
-            font-size: 16px;
-        }
-
-        #findSuggestionsBtn, #clearMyListBtn {
-            padding: 10px 15px;
-            background-color: #e8491d;
-            color: white;
-            border: none;
+        .input-group .search-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
             cursor: pointer;
-            font-size: 16px;
         }
 
-        #findSuggestionsBtn {
-            border-radius: 0 4px 4px 0;
+        .suggestions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
         }
 
-        #clearMyListBtn {
-            display: block; /* Để nút này xuống hàng */
-            margin-top: 10px;
-            border-radius: 4px;
+        .btn {
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
         }
 
+        .btn-primary {
+            background-color: #ef4444; /* Shopee-like red/orange */
+            color: white;
+            border: 1px solid #ef4444;
+        }
+        .btn-primary:hover { background-color: #dc2626; }
 
-        .results-section, .my-list-section {
-            margin-bottom: 30px;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border: 1px solid #eee;
-            border-radius: 5px;
+        .btn-secondary {
+            background-color: #fff;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+        .btn-secondary:hover { background-color: #fee2e2; }
+
+        .btn-outline {
+            background-color: transparent;
+            color: #6b7280;
+            border: 1px solid #d1d5db;
+        }
+        .btn-outline:hover { background-color: #f3f4f6; }
+
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th, td {
+            text-align: left;
+            padding: 10px 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background-color: #f9fafb;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        td .action-add {
+            color: #ef4444;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        td .action-add:hover { text-decoration: underline; }
+
+        .tooltip-icon {
+            color: #9ca3af;
+            font-size: 12px;
+            cursor: help;
         }
 
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        ul li {
-            padding: 8px 0;
-            border-bottom: 1px dotted #ddd;
+        .added-keywords-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        ul li:last-child {
-            border-bottom: none;
+        .empty-state {
+            text-align: center;
+            color: #9ca3af;
+            padding: 40px 20px;
         }
+        .empty-state img { width: 60px; opacity: 0.7; margin-bottom: 10px; }
 
-        .add-to-list-btn {
-            background-color: #5cb85c;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
+        .right-panel-footer {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
         }
-
-        .add-to-list-btn:hover {
-            background-color: #4cae4c;
-        }
-
-        .remove-from-list-btn {
-            background-color: #d9534f;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .remove-from-list-btn:hover {
-            background-color: #c9302c;
+        .dropdown-placeholder {
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            color: #6b7280;
+            background-color: #fff;
+            flex-grow: 1;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Công Cụ Gợi Ý Từ Khóa Shopee (Demo)</h1>
 
-        <div class="search-section">
-            <input type="text" id="seedKeywordInput" placeholder="Nhập từ khóa gốc (ví dụ: áo thun, tai nghe)">
-            <button id="findSuggestionsBtn">Tìm Gợi Ý</button>
+<div class="keyword-tool-container">
+    <div class="left-panel">
+        <h1>Thêm từ khóa</h1>
+        <div class="input-group">
+            <input type="text" id="seedKeywordInput" placeholder="Nhập từ khóa của bạn tại đây">
+            <span class="search-icon" id="searchIcon"></span> <!-- Search emoji -->
         </div>
 
-        <div class="results-section">
-            <h2>Từ Khóa Gợi Ý:</h2>
-            <ul id="suggestionsList">
-                <!-- Gợi ý sẽ được thêm vào đây bằng JavaScript -->
-            </ul>
+        <div class="suggestions-header">
+            <h2>Các từ khóa được đề xuất (<span id="suggestionCount">0</span>) <span class="tooltip-icon" title="Các từ khóa này được gợi ý dựa trên từ khóa bạn nhập">?</span></h2>
+            <button class="btn btn-secondary" id="addAllSuggestionsBtn" disabled>+ Thêm tất cả các từ khóa được đề xuất</button>
         </div>
 
-        <div class="my-list-section">
-            <h2>Danh Sách Từ Khóa Của Tôi:</h2>
-            <ul id="myKeywordsList">
-                <!-- Các từ khóa đã chọn sẽ được thêm vào đây bằng JavaScript -->
-            </ul>
-            <button id="clearMyListBtn" style="display: none;">Xóa Danh Sách Của Tôi</button>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Từ khóa</th>
+                        <th>Chất lượng từ khóa <span class="tooltip-icon" title="Điểm chất lượng dự kiến">?</span></th>
+                        <th>Tỉ lệ tìm kiếm <span class="tooltip-icon" title="Lượng tìm kiếm tương đối">?</span></th>
+                        <th>Giá thầu tham khảo <span class="tooltip-icon" title="Giá thầu gợi ý cho mỗi click">?</span></th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="suggestionsTableBody">
+                    <!-- Suggested keywords will be populated here -->
+                    <tr><td colspan="5" style="text-align:center; color:#9ca3af; padding: 20px;">Nhập từ khóa để xem gợi ý.</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const seedKeywordInput = document.getElementById('seedKeywordInput');
-            const findSuggestionsBtn = document.getElementById('findSuggestionsBtn');
-            const suggestionsList = document.getElementById('suggestionsList');
-            const myKeywordsList = document.getElementById('myKeywordsList');
-            const clearMyListBtn = document.getElementById('clearMyListBtn');
+    <div class="right-panel">
+        <div class="added-keywords-header">
+            <h2>Từ khóa đã thêm (<span id="addedCount">0</span>) <span class="tooltip-icon" title="Các từ khóa bạn đã chọn để thêm vào chiến dịch">?</span></h2>
+            <button class="btn btn-outline" id="removeAllAddedBtn" disabled>Xóa hết</button>
+        </div>
+        <div id="addedKeywordsList">
+            <div class="empty-state" id="emptyAddedState">
+                <img src="data:image/svg+xml;base64,PHN2ZyBhcmlhLWhpZGRlbj0idHJ1ZSIgZm9jdXNhYmxlPSJmYWxzZSIgZGF0YS1wcmVmaXg9ImZhciIgZGF0YS1pY29uPSJmaWxlLWFsdCIgY2xhc3M9InN2Zy1pbmxpbmUtLWZhIGZhLWZpbGUtYWx0IGZhLXctMTIiIHJvbGU9ImltZyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSIwIDAgMzg0IDUxMiI+PHBhdGggZmlsbD0iY3VycmVudENvbG9yIiBkPSJNMzg0LDEyOEgyNTZDMTk4LjEsMTI4LDEyOCwxOTguMSwxMjgsMjU2djE5MmMwLDUzLDQzLDEwMiw5Ni4xLDEwMkgzNTJjMTcuNywwLDMyLTE0LjMsMzItMzJWMTEyQzM4NCwxMTEuMSwzNzIuMSw5NiwzNTIsOTZoLTU3LjNsLTQwLTQwSDI1NmMtMjAuMywwLTM2LjcsMTMuMi00MS4zLDMySDEyOEwyMTIsOTZIMzUyeiBNMjU2LDQ0OEgxNjBjLTM1LjMsMC02NC0yOC43LTY0LTY0VjI1NmMwLTM1LjMsMjguNy02NCw2NC02NGg5NnYxMjhIMjU2djEyOEgyNTZ6IE0zNTIsNDQ4SDI4OFYyODhIMzUyVjQ0OHoiPjwvcGF0aD48L3N2Zz4=" alt="empty list">
+                <p>Bạn chưa chọn từ khóa nào</p>
+            </div>
+            <table id="addedKeywordsTable" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>Từ khóa</th>
+                        <th>Giá thầu <span class="tooltip-icon" title="Giá thầu bạn đã đặt hoặc giá thầu tham khảo">?</span></th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="addedKeywordsTableBody">
+                    <!-- Added keywords will be populated here -->
+                </tbody>
+            </table>
+        </div>
+        <div class="right-panel-footer">
+            <!-- <div style="font-size: 13px; color: #4b5563; margin-bottom: 5px;">Thay đổi loại từ khóa hàng loạt <span class="tooltip-icon" title="Áp dụng loại đối sánh cho tất cả từ khóa đã thêm">?</span></div>
+            <select class="dropdown-placeholder" disabled>
+                <option>Từ khóa mở rộng</option>
+                <option>Từ khóa chính xác</option>
+            </select> -->
+            <button class="btn btn-outline" id="cancelBtn" disabled>Hủy</button>
+            <button class="btn btn-primary" id="confirmBtn" disabled>Xác nhận</button>
+        </div>
+    </div>
+</div>
 
-            // Dữ liệu giả lập cho từ khóa gợi ý
-            const mockSuggestions = {
-                "áo thun": ["áo thun nam", "áo thun nữ", "áo thun local brand", "áo thun oversize", "áo thun trơn", "áo thun in hình"],
-                "tai nghe": ["tai nghe bluetooth", "tai nghe có dây", "tai nghe true wireless", "tai nghe gaming", "tai nghe chụp tai", "tai nghe nhét tai"],
-                "váy": ["váy công chúa", "váy maxi đi biển", "váy body", "váy suông", "váy dự tiệc"],
-                "giày": ["giày sneaker nam", "giày sneaker nữ", "giày cao gót", "giày thể thao", "giày lười"],
-                "son": ["son kem lì", "son dưỡng có màu", "son thỏi", "son tint", "son bóng"]
-            };
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const seedKeywordInput = document.getElementById('seedKeywordInput');
+    const searchIcon = document.getElementById('searchIcon');
+    const suggestionCountSpan = document.getElementById('suggestionCount');
+    const addAllSuggestionsBtn = document.getElementById('addAllSuggestionsBtn');
+    const suggestionsTableBody = document.getElementById('suggestionsTableBody');
+    
+    const addedCountSpan = document.getElementById('addedCount');
+    const removeAllAddedBtn = document.getElementById('removeAllAddedBtn');
+    const addedKeywordsList = document.getElementById('addedKeywordsList');
+    const emptyAddedState = document.getElementById('emptyAddedState');
+    const addedKeywordsTable = document.getElementById('addedKeywordsTable');
+    const addedKeywordsTableBody = document.getElementById('addedKeywordsTableBody');
 
-            let mySelectedKeywords = []; // Mảng lưu trữ các từ khóa người dùng đã chọn
+    const cancelBtn = document.getElementById('cancelBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
 
-            findSuggestionsBtn.addEventListener('click', () => {
-                const seed = seedKeywordInput.value.trim().toLowerCase();
-                suggestionsList.innerHTML = ''; // Xóa gợi ý cũ
+    // --- DỮ LIỆU GIẢ LẬP ---
+    const mockKeywordData = {
+        "áo": [
+            { id: 1, text: "áo thun nam", quality: "10/10", volume: 8961, bid: 3380, added: false },
+            { id: 2, text: "áo khoác nữ", quality: "9/10", volume: 12030, bid: 2800, added: false  },
+            { id: 3, text: "áo sơ mi trắng", quality: "8/10", volume: 5500, bid: 4100, added: false  },
+            { id: 4, text: "áo polo", quality: "10/10", volume: 7800, bid: 3000, added: false  },
+        ],
+        "quần": [
+            { id: 5, text: "quần jean ống rộng", quality: "9/10", volume: 15200, bid: 3700, added: false  },
+            { id: 6, text: "quần short nam", quality: "10/10", volume: 6700, bid: 2200, added: false  },
+            { id: 7, text: "quần tây nữ", quality: "8/10", volume: 4300, bid: 3100, added: false  },
+        ],
+        "váy": [
+            { id: 8, text: "váy công chúa bé gái", quality: "10/10", volume: 9500, bid: 2900, added: false  },
+            { id: 9, text: "váy maxi đi biển", quality: "9/10", volume: 11000, bid: 3500, added: false  },
+        ],
+        "bông tẩy trang": [
+            { id: 10, text: "bông tẩy trang Ipek", quality: "10/10", volume: 25000, bid: 1500, added: false  },
+            { id: 11, text: "bông tẩy trang Silcot", quality: "9/10", volume: 18000, bid: 1800, added: false  },
+            { id: 12, text: "bông tẩy trang Lameila", quality: "7/10", volume: 10000, bid: 900, added: false  },
+        ],
+         "befou bông tẩy trang": [
+            { id: 13, text: "befou bông tẩy trang 👍", quality: "10/10", volume: 8961, bid: 3380, added: false  },
+        ],
+        "bông": [
+             { id: 14, text: "bông 👍", quality: "10/10", volume: 79937, bid: 1001, added: false  },
+        ],
+        "bông tẩy": [
+             { id: 15, text: "bông tẩy 👍", quality: "10/10", volume: 3839, bid: 2702, added: false  },
+        ]
 
-                if (seed && mockSuggestions[seed]) {
-                    const suggestions = mockSuggestions[seed];
-                    suggestions.forEach(suggestion => {
-                        const li = document.createElement('li');
-                        li.textContent = suggestion;
+    };
 
-                        const addButton = document.createElement('button');
-                        addButton.textContent = 'Thêm vào danh sách';
-                        addButton.classList.add('add-to-list-btn');
-                        addButton.addEventListener('click', () => {
-                            addKeywordToMyList(suggestion);
-                        });
+    let currentSuggestions = [];
+    let addedKeywords = [];
 
-                        li.appendChild(addButton);
-                        suggestionsList.appendChild(li);
-                    });
-                } else if (seed) {
-                    suggestionsList.innerHTML = '<li>Không tìm thấy gợi ý cho từ khóa này. Thử: áo thun, tai nghe, váy, giày, son.</li>';
-                } else {
-                    suggestionsList.innerHTML = '<li>Vui lòng nhập từ khóa gốc.</li>';
+    function formatNumber(num) {
+        return num.toLocaleString('vi-VN');
+    }
+
+    function renderSuggestions() {
+        suggestionsTableBody.innerHTML = '';
+        if (currentSuggestions.length === 0 && seedKeywordInput.value.trim() !== "") {
+            suggestionsTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#9ca3af; padding: 20px;">Không tìm thấy gợi ý nào.</td></tr>`;
+            addAllSuggestionsBtn.disabled = true;
+        } else if (seedKeywordInput.value.trim() === "") {
+             suggestionsTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#9ca3af; padding: 20px;">Nhập từ khóa để xem gợi ý.</td></tr>`;
+             addAllSuggestionsBtn.disabled = true;
+        }
+        else {
+            currentSuggestions.forEach(kw => {
+                const row = suggestionsTableBody.insertRow();
+                row.innerHTML = `
+                    <td>${kw.text}</td>
+                    <td>${kw.quality}</td>
+                    <td>${formatNumber(kw.volume)}</td>
+                    <td>₫${formatNumber(kw.bid)}</td>
+                    <td>
+                        ${addedKeywords.find(k => k.id === kw.id) ? 
+                            '<span style="color:#9ca3af;">Đã thêm</span>' : 
+                            `<span class="action-add" data-id="${kw.id}">+ Thêm</span>`}
+                    </td>
+                `;
+            });
+            addAllSuggestionsBtn.disabled = currentSuggestions.every(kw => addedKeywords.find(k => k.id === kw.id));
+        }
+        suggestionCountSpan.textContent = currentSuggestions.length;
+    }
+
+    function renderAddedKeywords() {
+        addedKeywordsTableBody.innerHTML = '';
+        if (addedKeywords.length === 0) {
+            emptyAddedState.style.display = 'block';
+            addedKeywordsTable.style.display = 'none';
+            removeAllAddedBtn.disabled = true;
+            confirmBtn.disabled = true;
+            cancelBtn.disabled = true;
+
+        } else {
+            emptyAddedState.style.display = 'none';
+            addedKeywordsTable.style.display = 'table';
+            addedKeywords.forEach(kw => {
+                const row = addedKeywordsTableBody.insertRow();
+                row.innerHTML = `
+                    <td>${kw.text}</td>
+                    <td>₫${formatNumber(kw.bid)}</td>
+                    <td><span class="action-add" data-id="${kw.id}" data-remove="true" style="color:#6b7280;">Xóa</span></td>
+                `;
+            });
+            removeAllAddedBtn.disabled = false;
+            confirmBtn.disabled = false;
+            cancelBtn.disabled = false;
+        }
+        addedCountSpan.textContent = addedKeywords.length;
+        // Re-render suggestions to update "Đã thêm" status
+        if (currentSuggestions.length > 0) renderSuggestions();
+    }
+    
+    function findSuggestions(seed) {
+        currentSuggestions = [];
+        if (!seed) {
+            renderSuggestions();
+            return;
+        }
+        const seedLower = seed.toLowerCase();
+        for (const key in mockKeywordData) {
+            // Tìm kiếm theo key (từ khóa gốc của bộ data)
+            if (key.toLowerCase().includes(seedLower)) {
+                 mockKeywordData[key].forEach(kw => {
+                    if (!currentSuggestions.find(s => s.id === kw.id)) {
+                        currentSuggestions.push(kw);
+                    }
+                });
+            }
+            // Tìm kiếm trong từng gợi ý
+            mockKeywordData[key].forEach(kw => {
+                if (kw.text.toLowerCase().includes(seedLower)) {
+                     if (!currentSuggestions.find(s => s.id === kw.id)) {
+                        currentSuggestions.push(kw);
+                    }
                 }
             });
+        }
+        // Sort suggestions by volume descending as a default
+        currentSuggestions.sort((a,b) => b.volume - a.volume);
+        renderSuggestions();
+    }
 
-            function addKeywordToMyList(keyword) {
-                if (!mySelectedKeywords.includes(keyword)) {
-                    mySelectedKeywords.push(keyword);
-                    renderMyKeywordsList();
-                } else {
-                    alert('Từ khóa này đã có trong danh sách của bạn!');
-                }
+    seedKeywordInput.addEventListener('input', () => {
+        findSuggestions(seedKeywordInput.value.trim());
+    });
+    searchIcon.addEventListener('click', () => {
+        findSuggestions(seedKeywordInput.value.trim());
+    });
+
+
+    suggestionsTableBody.addEventListener('click', (event) => {
+        if (event.target.classList.contains('action-add') && event.target.dataset.id) {
+            const keywordId = parseInt(event.target.dataset.id);
+            const keywordToAdd = currentSuggestions.find(kw => kw.id === keywordId) || 
+                                 Object.values(mockKeywordData).flat().find(kw => kw.id === keywordId);
+
+            if (keywordToAdd && !addedKeywords.find(k => k.id === keywordId)) {
+                addedKeywords.push(keywordToAdd);
+                renderAddedKeywords();
             }
+        }
+    });
+    
+    addedKeywordsTableBody.addEventListener('click', (event) => {
+        if (event.target.dataset.remove === 'true' && event.target.dataset.id) {
+            const keywordIdToRemove = parseInt(event.target.dataset.id);
+            addedKeywords = addedKeywords.filter(kw => kw.id !== keywordIdToRemove);
+            renderAddedKeywords();
+        }
+    });
 
-            function removeKeywordFromMyList(keyword) {
-                mySelectedKeywords = mySelectedKeywords.filter(k => k !== keyword);
-                renderMyKeywordsList();
+    addAllSuggestionsBtn.addEventListener('click', () => {
+        currentSuggestions.forEach(kw => {
+            if (!addedKeywords.find(k => k.id === kw.id)) {
+                addedKeywords.push(kw);
             }
-
-            function renderMyKeywordsList() {
-                myKeywordsList.innerHTML = ''; // Xóa danh sách cũ
-                if (mySelectedKeywords.length > 0) {
-                    clearMyListBtn.style.display = 'block'; // Hiển thị nút xóa
-                    mySelectedKeywords.forEach(keyword => {
-                        const li = document.createElement('li');
-                        li.textContent = keyword;
-
-                        const removeButton = document.createElement('button');
-                        removeButton.textContent = 'Xóa';
-                        removeButton.classList.add('remove-from-list-btn');
-                        removeButton.addEventListener('click', () => {
-                            removeKeywordFromMyList(keyword);
-                        });
-
-                        li.appendChild(removeButton);
-                        myKeywordsList.appendChild(li);
-                    });
-                } else {
-                    clearMyListBtn.style.display = 'none'; // Ẩn nút xóa nếu danh sách rỗng
-                    myKeywordsList.innerHTML = '<li>Chưa có từ khóa nào được chọn.</li>';
-                }
-            }
-
-            clearMyListBtn.addEventListener('click', () => {
-                if (confirm('Bạn có chắc muốn xóa toàn bộ danh sách từ khóa đã chọn?')) {
-                    mySelectedKeywords = [];
-                    renderMyKeywordsList();
-                }
-            });
-
-            // Hiển thị ban đầu cho danh sách của tôi
-            renderMyKeywordsList();
         });
-    </script>
+        renderAddedKeywords();
+    });
+
+    removeAllAddedBtn.addEventListener('click', () => {
+        if (confirm('Bạn có chắc muốn xóa tất cả các từ khóa đã thêm không?')) {
+            addedKeywords = [];
+            renderAddedKeywords();
+        }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        alert('Hành động Hủy (demo)');
+        // Có thể reset lại trạng thái nếu cần
+    });
+
+    confirmBtn.addEventListener('click', () => {
+        if (addedKeywords.length > 0) {
+            alert(`Đã xác nhận ${addedKeywords.length} từ khóa (demo):\n${addedKeywords.map(k => k.text).join('\n')}`);
+            // Logic thực tế: gửi addedKeywords lên server hoặc xử lý tiếp
+        } else {
+            alert('Vui lòng chọn ít nhất một từ khóa.');
+        }
+    });
+
+    // Initial render
+    renderAddedKeywords();
+});
+</script>
+
 </body>
 </html>
