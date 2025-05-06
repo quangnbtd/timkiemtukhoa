@@ -31,12 +31,12 @@
         }
 
         .left-panel {
-            flex: 2; /* Takes 2/3 of the space */
+            flex: 2; 
             background-color: #fff;
         }
 
         .right-panel {
-            flex: 1; /* Takes 1/3 of the space */
+            flex: 1; 
             background-color: #f9fafb;
             border: 1px solid #e5e7eb;
         }
@@ -86,7 +86,7 @@
         }
 
         .btn-primary {
-            background-color: #ef4444; /* Shopee-like red/orange */
+            background-color: #ef4444; 
             color: white;
             border: 1px solid #ef4444;
         }
@@ -121,6 +121,9 @@
             background-color: #f9fafb;
             color: #6b7280;
             font-weight: 500;
+            position: sticky; /* CẦN THIẾT CHO THANH CUỘN HEADER CỐ ĐỊNH */
+            top: 0; /* CẦN THIẾT CHO THANH CUỘN HEADER CỐ ĐỊNH */
+            z-index: 1; /* Đảm bảo header nổi trên nội dung cuộn */
         }
         td .action-add {
             color: #ef4444;
@@ -156,14 +159,36 @@
             justify-content: flex-end;
             gap: 10px;
         }
-        .dropdown-placeholder {
-            padding: 8px 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            color: #6b7280;
-            background-color: #fff;
-            flex-grow: 1;
+        
+        /* --- THAY ĐỔI CSS CHO THANH CUỘN --- */
+        .table-container {
+            max-height: 400px; /* Đặt chiều cao tối đa cho bảng gợi ý */
+            overflow-y: auto; /* Thêm thanh cuộn dọc khi cần */
+            border: 1px solid #e5e7eb;
+            border-top: none; /* Bỏ border top vì header table đã có */
+            border-radius: 0 0 6px 6px;
         }
+        .table-container table thead th { /* Đảm bảo header không bị border của container che */
+             border-bottom: 1px solid #e5e7eb; /* Giữ border bottom cho header */
+        }
+
+        .copied-feedback { /* CSS cho thông báo copy thành công */
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .copied-feedback.show {
+            opacity: 1;
+        }
+
     </style>
 </head>
 <body>
@@ -173,7 +198,7 @@
         <h1>Thêm từ khóa</h1>
         <div class="input-group">
             <input type="text" id="seedKeywordInput" placeholder="Nhập từ khóa của bạn tại đây">
-            <span class="search-icon" id="searchIcon"></span> <!-- Search emoji -->
+            <span class="search-icon" id="searchIcon"></span>
         </div>
 
         <div class="suggestions-header">
@@ -181,6 +206,7 @@
             <button class="btn btn-secondary" id="addAllSuggestionsBtn" disabled>+ Thêm tất cả các từ khóa được đề xuất</button>
         </div>
 
+        <!-- --- THAY ĐỔI HTML: WRAP TABLE TRONG .table-container --- -->
         <div class="table-container">
             <table>
                 <thead>
@@ -193,7 +219,6 @@
                     </tr>
                 </thead>
                 <tbody id="suggestionsTableBody">
-                    <!-- Suggested keywords will be populated here -->
                     <tr><td colspan="5" style="text-align:center; color:#9ca3af; padding: 20px;">Nhập từ khóa để xem gợi ý.</td></tr>
                 </tbody>
             </table>
@@ -219,21 +244,19 @@
                     </tr>
                 </thead>
                 <tbody id="addedKeywordsTableBody">
-                    <!-- Added keywords will be populated here -->
                 </tbody>
             </table>
         </div>
         <div class="right-panel-footer">
-            <!-- <div style="font-size: 13px; color: #4b5563; margin-bottom: 5px;">Thay đổi loại từ khóa hàng loạt <span class="tooltip-icon" title="Áp dụng loại đối sánh cho tất cả từ khóa đã thêm">?</span></div>
-            <select class="dropdown-placeholder" disabled>
-                <option>Từ khóa mở rộng</option>
-                <option>Từ khóa chính xác</option>
-            </select> -->
             <button class="btn btn-outline" id="cancelBtn" disabled>Hủy</button>
-            <button class="btn btn-primary" id="confirmBtn" disabled>Xác nhận</button>
+            <!-- --- THAY ĐỔI HTML: NÚT "XÁC NHẬN" THÀNH "COPY TỪ KHÓA" --- -->
+            <button class="btn btn-primary" id="copyKeywordsBtn" disabled>Copy từ khóa</button>
         </div>
     </div>
 </div>
+<!-- --- THÊM HTML CHO THÔNG BÁO COPY --- -->
+<div id="copiedFeedback" class="copied-feedback">Đã copy từ khóa vào clipboard!</div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -245,35 +268,57 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const addedCountSpan = document.getElementById('addedCount');
     const removeAllAddedBtn = document.getElementById('removeAllAddedBtn');
-    const addedKeywordsList = document.getElementById('addedKeywordsList');
     const emptyAddedState = document.getElementById('emptyAddedState');
     const addedKeywordsTable = document.getElementById('addedKeywordsTable');
     const addedKeywordsTableBody = document.getElementById('addedKeywordsTableBody');
 
     const cancelBtn = document.getElementById('cancelBtn');
-    const confirmBtn = document.getElementById('confirmBtn');
+    // --- THAY ĐỔI JS: THAM CHIẾU NÚT MỚI ---
+    const copyKeywordsBtn = document.getElementById('copyKeywordsBtn');
+    const copiedFeedback = document.getElementById('copiedFeedback'); // Tham chiếu thông báo
 
-    // --- DỮ LIỆU GIẢ LẬP ---
+    // --- DỮ LIỆU GIẢ LẬP (MỞ RỘNG ĐỂ CÓ NHIỀU GỢI Ý HƠN) ---
     const mockKeywordData = {
         "áo": [
             { id: 1, text: "áo thun nam", quality: "10/10", volume: 8961, bid: 3380, added: false },
             { id: 2, text: "áo khoác nữ", quality: "9/10", volume: 12030, bid: 2800, added: false  },
             { id: 3, text: "áo sơ mi trắng", quality: "8/10", volume: 5500, bid: 4100, added: false  },
-            { id: 4, text: "áo polo", quality: "10/10", volume: 7800, bid: 3000, added: false  },
+            { id: 4, text: "áo polo nam hàng hiệu", quality: "10/10", volume: 7800, bid: 3000, added: false  },
+            { id: 16, text: "áo len cổ lọ", quality: "7/10", volume: 3200, bid: 2500, added: false },
+            { id: 17, text: "áo hoodie local brand", quality: "9/10", volume: 9500, bid: 3800, added: false },
+            { id: 18, text: "áo croptop ôm body", quality: "8/10", volume: 6100, bid: 2700, added: false },
+            { id: 19, text: "áo dài cách tân", quality: "10/10", volume: 11500, bid: 4500, added: false },
+            { id: 20, text: "áo gió chống nước", quality: "9/10", volume: 7200, bid: 3200, added: false },
+            { id: 21, text: "áo ba lỗ thể thao", quality: "7/10", volume: 2800, bid: 1900, added: false },
+            { id: 22, text: "áo nỉ có mũ", quality: "8/10", volume: 5900, bid: 2900, added: false },
         ],
         "quần": [
-            { id: 5, text: "quần jean ống rộng", quality: "9/10", volume: 15200, bid: 3700, added: false  },
-            { id: 6, text: "quần short nam", quality: "10/10", volume: 6700, bid: 2200, added: false  },
-            { id: 7, text: "quần tây nữ", quality: "8/10", volume: 4300, bid: 3100, added: false  },
+            { id: 5, text: "quần jean ống rộng nữ", quality: "9/10", volume: 15200, bid: 3700, added: false  },
+            { id: 6, text: "quần short nam kaki", quality: "10/10", volume: 6700, bid: 2200, added: false  },
+            { id: 7, text: "quần tây nữ công sở", quality: "8/10", volume: 4300, bid: 3100, added: false  },
+            { id: 23, text: "quần baggy vải", quality: "9/10", volume: 8800, bid: 2600, added: false },
+            { id: 24, text: "quần jogger thể thao", quality: "10/10", volume: 7100, bid: 2400, added: false },
+             { id: 25, text: "quần lót nam cotton", quality: "8/10", volume: 10500, bid: 1800, added: false },
+            { id: 26, text: "quần culottes ống rộng", quality: "9/10", volume: 6500, bid: 3300, added: false },
+            { id: 27, text: "quần yếm jean", quality: "7/10", volume: 3900, bid: 2900, added: false },
+            { id: 28, text: "quần legging tập gym", quality: "10/10", volume: 9200, bid: 2100, added: false },
+            { id: 29, text: "quần đũi nam", quality: "8/10", volume: 5300, bid: 2700, added: false },
         ],
         "váy": [
             { id: 8, text: "váy công chúa bé gái", quality: "10/10", volume: 9500, bid: 2900, added: false  },
-            { id: 9, text: "váy maxi đi biển", quality: "9/10", volume: 11000, bid: 3500, added: false  },
+            { id: 9, text: "váy maxi đi biển voan", quality: "9/10", volume: 11000, bid: 3500, added: false  },
+            { id: 30, text: "váy body dự tiệc sang trọng", quality: "8/10", volume: 7500, bid: 4200, added: false },
+            { id: 31, text: "váy babydoll dễ thương", quality: "9/10", volume: 6800, bid: 2800, added: false },
+            { id: 32, text: "váy hai dây lụa", quality: "7/10", volume: 4200, bid: 3100, added: false },
+            { id: 33, text: "váy xòe công sở", quality: "10/10", volume: 8900, bid: 3300, added: false },
         ],
         "bông tẩy trang": [
-            { id: 10, text: "bông tẩy trang Ipek", quality: "10/10", volume: 25000, bid: 1500, added: false  },
-            { id: 11, text: "bông tẩy trang Silcot", quality: "9/10", volume: 18000, bid: 1800, added: false  },
-            { id: 12, text: "bông tẩy trang Lameila", quality: "7/10", volume: 10000, bid: 900, added: false  },
+            { id: 10, text: "bông tẩy trang Ipek 120 miếng", quality: "10/10", volume: 25000, bid: 1500, added: false  },
+            { id: 11, text: "bông tẩy trang Silcot hộp xanh", quality: "9/10", volume: 18000, bid: 1800, added: false  },
+            { id: 12, text: "bông tẩy trang Lameila túi zip", quality: "7/10", volume: 10000, bid: 900, added: false  },
+            { id: 34, text: "bông tẩy trang Ceibaオーガニックコットン", quality: "8/10", volume: 12000, bid: 2200, added: false }, //Thêm chữ Nhật
+            { id: 35, text: "bông tẩy trang Aura Beauty", quality: "9/10", volume: 15000, bid: 1600, added: false },
+            { id: 36, text: "bông tẩy trang Muji", quality: "10/10", volume: 19000, bid: 2500, added: false },
         ],
          "befou bông tẩy trang": [
             { id: 13, text: "befou bông tẩy trang 👍", quality: "10/10", volume: 8961, bid: 3380, added: false  },
@@ -284,7 +329,6 @@ document.addEventListener('DOMContentLoaded', () => {
         "bông tẩy": [
              { id: 15, text: "bông tẩy 👍", quality: "10/10", volume: 3839, bid: 2702, added: false  },
         ]
-
     };
 
     let currentSuggestions = [];
@@ -296,7 +340,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderSuggestions() {
         suggestionsTableBody.innerHTML = '';
-        if (currentSuggestions.length === 0 && seedKeywordInput.value.trim() !== "") {
+        // --- THAY ĐỔI JS: GIỚI HẠN SỐ LƯỢNG GỢI Ý HIỂN THỊ BAN ĐẦU, CÓ THỂ BỎ QUA NẾU MUỐN HIỂN THỊ TẤT CẢ ---
+        const suggestionsToDisplay = currentSuggestions; // Hiển thị tất cả gợi ý tìm được
+
+        if (suggestionsToDisplay.length === 0 && seedKeywordInput.value.trim() !== "") {
             suggestionsTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#9ca3af; padding: 20px;">Không tìm thấy gợi ý nào.</td></tr>`;
             addAllSuggestionsBtn.disabled = true;
         } else if (seedKeywordInput.value.trim() === "") {
@@ -304,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
              addAllSuggestionsBtn.disabled = true;
         }
         else {
-            currentSuggestions.forEach(kw => {
+            suggestionsToDisplay.forEach(kw => {
                 const row = suggestionsTableBody.insertRow();
                 row.innerHTML = `
                     <td>${kw.text}</td>
@@ -318,9 +365,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                 `;
             });
-            addAllSuggestionsBtn.disabled = currentSuggestions.every(kw => addedKeywords.find(k => k.id === kw.id));
+            // Kiểm tra xem tất cả các gợi ý hiện tại đã được thêm chưa
+            const allCurrentDisplayedAdded = suggestionsToDisplay.every(kw => addedKeywords.find(k => k.id === kw.id));
+            addAllSuggestionsBtn.disabled = suggestionsToDisplay.length === 0 || allCurrentDisplayedAdded;
         }
-        suggestionCountSpan.textContent = currentSuggestions.length;
+        suggestionCountSpan.textContent = currentSuggestions.length; // Vẫn hiển thị tổng số gợi ý tìm được
     }
 
     function renderAddedKeywords() {
@@ -329,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
             emptyAddedState.style.display = 'block';
             addedKeywordsTable.style.display = 'none';
             removeAllAddedBtn.disabled = true;
-            confirmBtn.disabled = true;
+            copyKeywordsBtn.disabled = true; // --- THAY ĐỔI JS ---
             cancelBtn.disabled = true;
 
         } else {
@@ -344,11 +393,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             });
             removeAllAddedBtn.disabled = false;
-            confirmBtn.disabled = false;
+            copyKeywordsBtn.disabled = false; // --- THAY ĐỔI JS ---
             cancelBtn.disabled = false;
         }
         addedCountSpan.textContent = addedKeywords.length;
-        // Re-render suggestions to update "Đã thêm" status
         if (currentSuggestions.length > 0) renderSuggestions();
     }
     
@@ -360,7 +408,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const seedLower = seed.toLowerCase();
         for (const key in mockKeywordData) {
-            // Tìm kiếm theo key (từ khóa gốc của bộ data)
             if (key.toLowerCase().includes(seedLower)) {
                  mockKeywordData[key].forEach(kw => {
                     if (!currentSuggestions.find(s => s.id === kw.id)) {
@@ -368,7 +415,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             }
-            // Tìm kiếm trong từng gợi ý
             mockKeywordData[key].forEach(kw => {
                 if (kw.text.toLowerCase().includes(seedLower)) {
                      if (!currentSuggestions.find(s => s.id === kw.id)) {
@@ -377,7 +423,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-        // Sort suggestions by volume descending as a default
         currentSuggestions.sort((a,b) => b.volume - a.volume);
         renderSuggestions();
     }
@@ -393,8 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
     suggestionsTableBody.addEventListener('click', (event) => {
         if (event.target.classList.contains('action-add') && event.target.dataset.id) {
             const keywordId = parseInt(event.target.dataset.id);
-            const keywordToAdd = currentSuggestions.find(kw => kw.id === keywordId) || 
-                                 Object.values(mockKeywordData).flat().find(kw => kw.id === keywordId);
+            const keywordToAdd = Object.values(mockKeywordData).flat().find(kw => kw.id === keywordId); // Tìm trong toàn bộ data
 
             if (keywordToAdd && !addedKeywords.find(k => k.id === keywordId)) {
                 addedKeywords.push(keywordToAdd);
@@ -428,20 +472,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     cancelBtn.addEventListener('click', () => {
-        alert('Hành động Hủy (demo)');
-        // Có thể reset lại trạng thái nếu cần
-    });
-
-    confirmBtn.addEventListener('click', () => {
-        if (addedKeywords.length > 0) {
-            alert(`Đã xác nhận ${addedKeywords.length} từ khóa (demo):\n${addedKeywords.map(k => k.text).join('\n')}`);
-            // Logic thực tế: gửi addedKeywords lên server hoặc xử lý tiếp
-        } else {
-            alert('Vui lòng chọn ít nhất một từ khóa.');
+        // Có thể reset lại trạng thái nếu cần, ví dụ xóa input, xóa gợi ý, xóa danh sách đã thêm
+        if (confirm('Bạn có chắc muốn hủy và xóa mọi thao tác hiện tại?')) {
+            seedKeywordInput.value = '';
+            currentSuggestions = [];
+            addedKeywords = [];
+            renderSuggestions();
+            renderAddedKeywords();
         }
     });
 
-    // Initial render
+    // --- THAY ĐỔI JS: CHỨC NĂNG NÚT COPY ---
+    copyKeywordsBtn.addEventListener('click', () => {
+        if (addedKeywords.length > 0) {
+            const keywordsToCopy = addedKeywords.map(kw => kw.text).join('\n'); // Mỗi từ khóa trên một dòng mới
+            navigator.clipboard.writeText(keywordsToCopy)
+                .then(() => {
+                    // Hiển thị thông báo thành công
+                    copiedFeedback.classList.add('show');
+                    setTimeout(() => {
+                        copiedFeedback.classList.remove('show');
+                    }, 2000); // Ẩn sau 2 giây
+                })
+                .catch(err => {
+                    console.error('Lỗi khi copy từ khóa: ', err);
+                    alert('Không thể copy từ khóa. Vui lòng thử lại hoặc copy thủ công.');
+                });
+        } else {
+            alert('Vui lòng chọn ít nhất một từ khóa để copy.');
+        }
+    });
+
     renderAddedKeywords();
 });
 </script>
