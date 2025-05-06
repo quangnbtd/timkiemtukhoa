@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thêm Từ Khóa Demo</title>
+    <title>Thêm Từ Khóa Demo (Google Suggest)</title>
     <style>
+        /* CSS GIỮ NGUYÊN NHƯ PHIÊN BẢN TRƯỚC ĐÓ CÓ THANH CUỘN VÀ NÚT COPY */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: #f4f6f8;
@@ -121,9 +122,9 @@
             background-color: #f9fafb;
             color: #6b7280;
             font-weight: 500;
-            position: sticky; /* CẦN THIẾT CHO THANH CUỘN HEADER CỐ ĐỊNH */
-            top: 0; /* CẦN THIẾT CHO THANH CUỘN HEADER CỐ ĐỊNH */
-            z-index: 1; /* Đảm bảo header nổi trên nội dung cuộn */
+            position: sticky; 
+            top: 0; 
+            z-index: 1; 
         }
         td .action-add {
             color: #ef4444;
@@ -160,19 +161,18 @@
             gap: 10px;
         }
         
-        /* --- THAY ĐỔI CSS CHO THANH CUỘN --- */
         .table-container {
-            max-height: 400px; /* Đặt chiều cao tối đa cho bảng gợi ý */
-            overflow-y: auto; /* Thêm thanh cuộn dọc khi cần */
+            max-height: 400px; 
+            overflow-y: auto; 
             border: 1px solid #e5e7eb;
-            border-top: none; /* Bỏ border top vì header table đã có */
+            border-top: none; 
             border-radius: 0 0 6px 6px;
         }
-        .table-container table thead th { /* Đảm bảo header không bị border của container che */
-             border-bottom: 1px solid #e5e7eb; /* Giữ border bottom cho header */
+        .table-container table thead th { 
+             border-bottom: 1px solid #e5e7eb; 
         }
 
-        .copied-feedback { /* CSS cho thông báo copy thành công */
+        .copied-feedback { 
             position: fixed;
             bottom: 20px;
             left: 50%;
@@ -188,7 +188,12 @@
         .copied-feedback.show {
             opacity: 1;
         }
-
+        .api-error-message {
+            color: red;
+            font-size: 12px;
+            margin-top: 5px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -200,21 +205,21 @@
             <input type="text" id="seedKeywordInput" placeholder="Nhập từ khóa của bạn tại đây">
             <span class="search-icon" id="searchIcon"></span>
         </div>
+        <div id="apiErrorMessage" class="api-error-message"></div> <!-- Để hiển thị lỗi API -->
 
         <div class="suggestions-header">
-            <h2>Các từ khóa được đề xuất (<span id="suggestionCount">0</span>) <span class="tooltip-icon" title="Các từ khóa này được gợi ý dựa trên từ khóa bạn nhập">?</span></h2>
+            <h2>Các từ khóa được đề xuất (<span id="suggestionCount">0</span>) <span class="tooltip-icon" title="Gợi ý từ Google Suggest">?</span></h2>
             <button class="btn btn-secondary" id="addAllSuggestionsBtn" disabled>+ Thêm tất cả các từ khóa được đề xuất</button>
         </div>
 
-        <!-- --- THAY ĐỔI HTML: WRAP TABLE TRONG .table-container --- -->
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Từ khóa</th>
-                        <th>Chất lượng từ khóa <span class="tooltip-icon" title="Điểm chất lượng dự kiến">?</span></th>
-                        <th>Tỉ lệ tìm kiếm <span class="tooltip-icon" title="Lượng tìm kiếm tương đối">?</span></th>
-                        <th>Giá thầu tham khảo <span class="tooltip-icon" title="Giá thầu gợi ý cho mỗi click">?</span></th>
+                        <th>Từ khóa (Google Suggest)</th>
+                        <th>Chất lượng (Giả lập)</th>
+                        <th>Volume (Giả lập)</th>
+                        <th>Giá thầu (Giả lập)</th>
                         <th>Hành động</th>
                     </tr>
                 </thead>
@@ -227,7 +232,7 @@
 
     <div class="right-panel">
         <div class="added-keywords-header">
-            <h2>Từ khóa đã thêm (<span id="addedCount">0</span>) <span class="tooltip-icon" title="Các từ khóa bạn đã chọn để thêm vào chiến dịch">?</span></h2>
+            <h2>Từ khóa đã thêm (<span id="addedCount">0</span>) <span class="tooltip-icon" title="Các từ khóa bạn đã chọn">?</span></h2>
             <button class="btn btn-outline" id="removeAllAddedBtn" disabled>Xóa hết</button>
         </div>
         <div id="addedKeywordsList">
@@ -239,7 +244,7 @@
                 <thead>
                     <tr>
                         <th>Từ khóa</th>
-                        <th>Giá thầu <span class="tooltip-icon" title="Giá thầu bạn đã đặt hoặc giá thầu tham khảo">?</span></th>
+                        <th>Giá thầu <span class="tooltip-icon" title="Giá thầu giả lập">?</span></th>
                         <th>Hành động</th>
                     </tr>
                 </thead>
@@ -249,12 +254,10 @@
         </div>
         <div class="right-panel-footer">
             <button class="btn btn-outline" id="cancelBtn" disabled>Hủy</button>
-            <!-- --- THAY ĐỔI HTML: NÚT "XÁC NHẬN" THÀNH "COPY TỪ KHÓA" --- -->
             <button class="btn btn-primary" id="copyKeywordsBtn" disabled>Copy từ khóa</button>
         </div>
     </div>
 </div>
-<!-- --- THÊM HTML CHO THÔNG BÁO COPY --- -->
 <div id="copiedFeedback" class="copied-feedback">Đã copy từ khóa vào clipboard!</div>
 
 
@@ -262,6 +265,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const seedKeywordInput = document.getElementById('seedKeywordInput');
     const searchIcon = document.getElementById('searchIcon');
+    const apiErrorMessage = document.getElementById('apiErrorMessage'); // Thêm tham chiếu
     const suggestionCountSpan = document.getElementById('suggestionCount');
     const addAllSuggestionsBtn = document.getElementById('addAllSuggestionsBtn');
     const suggestionsTableBody = document.getElementById('suggestionsTableBody');
@@ -273,66 +277,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const addedKeywordsTableBody = document.getElementById('addedKeywordsTableBody');
 
     const cancelBtn = document.getElementById('cancelBtn');
-    // --- THAY ĐỔI JS: THAM CHIẾU NÚT MỚI ---
     const copyKeywordsBtn = document.getElementById('copyKeywordsBtn');
-    const copiedFeedback = document.getElementById('copiedFeedback'); // Tham chiếu thông báo
-
-    // --- DỮ LIỆU GIẢ LẬP (MỞ RỘNG ĐỂ CÓ NHIỀU GỢI Ý HƠN) ---
-    const mockKeywordData = {
-        "áo": [
-            { id: 1, text: "áo thun nam", quality: "10/10", volume: 8961, bid: 3380, added: false },
-            { id: 2, text: "áo khoác nữ", quality: "9/10", volume: 12030, bid: 2800, added: false  },
-            { id: 3, text: "áo sơ mi trắng", quality: "8/10", volume: 5500, bid: 4100, added: false  },
-            { id: 4, text: "áo polo nam hàng hiệu", quality: "10/10", volume: 7800, bid: 3000, added: false  },
-            { id: 16, text: "áo len cổ lọ", quality: "7/10", volume: 3200, bid: 2500, added: false },
-            { id: 17, text: "áo hoodie local brand", quality: "9/10", volume: 9500, bid: 3800, added: false },
-            { id: 18, text: "áo croptop ôm body", quality: "8/10", volume: 6100, bid: 2700, added: false },
-            { id: 19, text: "áo dài cách tân", quality: "10/10", volume: 11500, bid: 4500, added: false },
-            { id: 20, text: "áo gió chống nước", quality: "9/10", volume: 7200, bid: 3200, added: false },
-            { id: 21, text: "áo ba lỗ thể thao", quality: "7/10", volume: 2800, bid: 1900, added: false },
-            { id: 22, text: "áo nỉ có mũ", quality: "8/10", volume: 5900, bid: 2900, added: false },
-        ],
-        "quần": [
-            { id: 5, text: "quần jean ống rộng nữ", quality: "9/10", volume: 15200, bid: 3700, added: false  },
-            { id: 6, text: "quần short nam kaki", quality: "10/10", volume: 6700, bid: 2200, added: false  },
-            { id: 7, text: "quần tây nữ công sở", quality: "8/10", volume: 4300, bid: 3100, added: false  },
-            { id: 23, text: "quần baggy vải", quality: "9/10", volume: 8800, bid: 2600, added: false },
-            { id: 24, text: "quần jogger thể thao", quality: "10/10", volume: 7100, bid: 2400, added: false },
-             { id: 25, text: "quần lót nam cotton", quality: "8/10", volume: 10500, bid: 1800, added: false },
-            { id: 26, text: "quần culottes ống rộng", quality: "9/10", volume: 6500, bid: 3300, added: false },
-            { id: 27, text: "quần yếm jean", quality: "7/10", volume: 3900, bid: 2900, added: false },
-            { id: 28, text: "quần legging tập gym", quality: "10/10", volume: 9200, bid: 2100, added: false },
-            { id: 29, text: "quần đũi nam", quality: "8/10", volume: 5300, bid: 2700, added: false },
-        ],
-        "váy": [
-            { id: 8, text: "váy công chúa bé gái", quality: "10/10", volume: 9500, bid: 2900, added: false  },
-            { id: 9, text: "váy maxi đi biển voan", quality: "9/10", volume: 11000, bid: 3500, added: false  },
-            { id: 30, text: "váy body dự tiệc sang trọng", quality: "8/10", volume: 7500, bid: 4200, added: false },
-            { id: 31, text: "váy babydoll dễ thương", quality: "9/10", volume: 6800, bid: 2800, added: false },
-            { id: 32, text: "váy hai dây lụa", quality: "7/10", volume: 4200, bid: 3100, added: false },
-            { id: 33, text: "váy xòe công sở", quality: "10/10", volume: 8900, bid: 3300, added: false },
-        ],
-        "bông tẩy trang": [
-            { id: 10, text: "bông tẩy trang Ipek 120 miếng", quality: "10/10", volume: 25000, bid: 1500, added: false  },
-            { id: 11, text: "bông tẩy trang Silcot hộp xanh", quality: "9/10", volume: 18000, bid: 1800, added: false  },
-            { id: 12, text: "bông tẩy trang Lameila túi zip", quality: "7/10", volume: 10000, bid: 900, added: false  },
-            { id: 34, text: "bông tẩy trang Ceibaオーガニックコットン", quality: "8/10", volume: 12000, bid: 2200, added: false }, //Thêm chữ Nhật
-            { id: 35, text: "bông tẩy trang Aura Beauty", quality: "9/10", volume: 15000, bid: 1600, added: false },
-            { id: 36, text: "bông tẩy trang Muji", quality: "10/10", volume: 19000, bid: 2500, added: false },
-        ],
-         "befou bông tẩy trang": [
-            { id: 13, text: "befou bông tẩy trang 👍", quality: "10/10", volume: 8961, bid: 3380, added: false  },
-        ],
-        "bông": [
-             { id: 14, text: "bông 👍", quality: "10/10", volume: 79937, bid: 1001, added: false  },
-        ],
-        "bông tẩy": [
-             { id: 15, text: "bông tẩy 👍", quality: "10/10", volume: 3839, bid: 2702, added: false  },
-        ]
-    };
+    const copiedFeedback = document.getElementById('copiedFeedback'); 
 
     let currentSuggestions = [];
     let addedKeywords = [];
+    let searchTimeout; // Biến để quản lý timeout cho debounce
 
     function formatNumber(num) {
         return num.toLocaleString('vi-VN');
@@ -340,11 +290,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderSuggestions() {
         suggestionsTableBody.innerHTML = '';
-        // --- THAY ĐỔI JS: GIỚI HẠN SỐ LƯỢNG GỢI Ý HIỂN THỊ BAN ĐẦU, CÓ THỂ BỎ QUA NẾU MUỐN HIỂN THỊ TẤT CẢ ---
-        const suggestionsToDisplay = currentSuggestions; // Hiển thị tất cả gợi ý tìm được
+        const suggestionsToDisplay = currentSuggestions;
 
         if (suggestionsToDisplay.length === 0 && seedKeywordInput.value.trim() !== "") {
-            suggestionsTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#9ca3af; padding: 20px;">Không tìm thấy gợi ý nào.</td></tr>`;
+            if (!apiErrorMessage.textContent) { // Chỉ hiển thị nếu không có lỗi API
+                 suggestionsTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#9ca3af; padding: 20px;">Không tìm thấy gợi ý nào từ Google.</td></tr>`;
+            }
             addAllSuggestionsBtn.disabled = true;
         } else if (seedKeywordInput.value.trim() === "") {
              suggestionsTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#9ca3af; padding: 20px;">Nhập từ khóa để xem gợi ý.</td></tr>`;
@@ -365,11 +316,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                 `;
             });
-            // Kiểm tra xem tất cả các gợi ý hiện tại đã được thêm chưa
             const allCurrentDisplayedAdded = suggestionsToDisplay.every(kw => addedKeywords.find(k => k.id === kw.id));
             addAllSuggestionsBtn.disabled = suggestionsToDisplay.length === 0 || allCurrentDisplayedAdded;
         }
-        suggestionCountSpan.textContent = currentSuggestions.length; // Vẫn hiển thị tổng số gợi ý tìm được
+        suggestionCountSpan.textContent = currentSuggestions.length;
     }
 
     function renderAddedKeywords() {
@@ -378,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
             emptyAddedState.style.display = 'block';
             addedKeywordsTable.style.display = 'none';
             removeAllAddedBtn.disabled = true;
-            copyKeywordsBtn.disabled = true; // --- THAY ĐỔI JS ---
+            copyKeywordsBtn.disabled = true; 
             cancelBtn.disabled = true;
 
         } else {
@@ -393,55 +343,95 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             });
             removeAllAddedBtn.disabled = false;
-            copyKeywordsBtn.disabled = false; // --- THAY ĐỔI JS ---
+            copyKeywordsBtn.disabled = false; 
             cancelBtn.disabled = false;
         }
         addedCountSpan.textContent = addedKeywords.length;
-        if (currentSuggestions.length > 0) renderSuggestions();
+        if (currentSuggestions.length > 0 || seedKeywordInput.value.trim() !== "") renderSuggestions(); // Luôn render lại suggestions
     }
     
-    function findSuggestions(seed) {
+    // --- SỬA LẠI HÀM findSuggestions ĐỂ GỌI GOOGLE SUGGEST API ---
+    async function fetchGoogleSuggestions(seed) {
         currentSuggestions = [];
+        apiErrorMessage.textContent = ''; // Xóa lỗi cũ
         if (!seed) {
             renderSuggestions();
             return;
         }
-        const seedLower = seed.toLowerCase();
-        for (const key in mockKeywordData) {
-            if (key.toLowerCase().includes(seedLower)) {
-                 mockKeywordData[key].forEach(kw => {
-                    if (!currentSuggestions.find(s => s.id === kw.id)) {
-                        currentSuggestions.push(kw);
-                    }
-                });
+        const suggestionsDisplayLimit = 15; // Số lượng gợi ý tối đa từ API
+
+        try {
+            // Endpoint của Google Suggest. `client=firefox` là một trick phổ biến.
+            // `hl=vi` để ưu tiên kết quả tiếng Việt.
+            const response = await fetch(`https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(seed)}&hl=vi`);
+            
+            if (!response.ok) {
+                throw new Error(`Lỗi kết nối tới Google Suggest: ${response.status}`);
             }
-            mockKeywordData[key].forEach(kw => {
-                if (kw.text.toLowerCase().includes(seedLower)) {
-                     if (!currentSuggestions.find(s => s.id === kw.id)) {
-                        currentSuggestions.push(kw);
-                    }
-                }
-            });
+            
+            const data = await response.json();
+            
+            if (data && data[1] && data[1].length > 0) {
+                currentSuggestions = data[1].slice(0, suggestionsDisplayLimit).map((suggestionText, index) => ({
+                    id: `gs-${seed.replace(/\s/g, '')}-${index}`, // Tạo ID độc đáo cho mỗi gợi ý
+                    text: suggestionText,
+                    // Các chỉ số này là giả lập vì Google Suggest không cung cấp
+                    quality: "N/A", 
+                    volume: Math.floor(Math.random() * 20000) + 1000, // Giả lập volume
+                    bid: Math.floor(Math.random() * 4000) + 500,    // Giả lập bid
+                    added: false // Trạng thái ban đầu là chưa được thêm
+                }));
+            }
+        } catch (error) {
+            console.error("Lỗi khi lấy gợi ý từ Google:", error);
+            apiErrorMessage.textContent = "Không thể tải gợi ý từ Google. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau. Lỗi CORS có thể xảy ra.";
+            // Nếu có lỗi, currentSuggestions sẽ rỗng
         }
-        currentSuggestions.sort((a,b) => b.volume - a.volume);
         renderSuggestions();
     }
 
+    // Debounce function để tránh gọi API quá nhiều lần khi người dùng gõ nhanh
+    function debounce(func, delay) {
+        return function(...args) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    const debouncedFetchSuggestions = debounce(fetchGoogleSuggestions, 500); // Chờ 500ms sau khi người dùng ngừng gõ
+
     seedKeywordInput.addEventListener('input', () => {
-        findSuggestions(seedKeywordInput.value.trim());
+        const seed = seedKeywordInput.value.trim();
+        if (seed) {
+            debouncedFetchSuggestions(seed);
+        } else {
+            clearTimeout(searchTimeout); // Nếu input rỗng, hủy các yêu cầu đang chờ
+            currentSuggestions = [];
+            apiErrorMessage.textContent = '';
+            renderSuggestions();
+        }
     });
+
     searchIcon.addEventListener('click', () => {
-        findSuggestions(seedKeywordInput.value.trim());
+        const seed = seedKeywordInput.value.trim();
+        if (seed) {
+            clearTimeout(searchTimeout); // Hủy debounce nếu nhấn nút tìm kiếm ngay
+            fetchGoogleSuggestions(seed);
+        } else {
+             currentSuggestions = [];
+             apiErrorMessage.textContent = '';
+             renderSuggestions();
+        }
     });
 
 
     suggestionsTableBody.addEventListener('click', (event) => {
         if (event.target.classList.contains('action-add') && event.target.dataset.id) {
-            const keywordId = parseInt(event.target.dataset.id);
-            const keywordToAdd = Object.values(mockKeywordData).flat().find(kw => kw.id === keywordId); // Tìm trong toàn bộ data
+            const keywordId = event.target.dataset.id; // ID giờ là string từ Google Suggest
+            const keywordToAdd = currentSuggestions.find(kw => kw.id === keywordId);
 
             if (keywordToAdd && !addedKeywords.find(k => k.id === keywordId)) {
-                addedKeywords.push(keywordToAdd);
+                addedKeywords.push({...keywordToAdd}); // Clone đối tượng để tránh thay đổi trạng thái 'added' của currentSuggestions
                 renderAddedKeywords();
             }
         }
@@ -449,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     addedKeywordsTableBody.addEventListener('click', (event) => {
         if (event.target.dataset.remove === 'true' && event.target.dataset.id) {
-            const keywordIdToRemove = parseInt(event.target.dataset.id);
+            const keywordIdToRemove = event.target.dataset.id;
             addedKeywords = addedKeywords.filter(kw => kw.id !== keywordIdToRemove);
             renderAddedKeywords();
         }
@@ -458,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
     addAllSuggestionsBtn.addEventListener('click', () => {
         currentSuggestions.forEach(kw => {
             if (!addedKeywords.find(k => k.id === kw.id)) {
-                addedKeywords.push(kw);
+                addedKeywords.push({...kw});
             }
         });
         renderAddedKeywords();
@@ -472,27 +462,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     cancelBtn.addEventListener('click', () => {
-        // Có thể reset lại trạng thái nếu cần, ví dụ xóa input, xóa gợi ý, xóa danh sách đã thêm
         if (confirm('Bạn có chắc muốn hủy và xóa mọi thao tác hiện tại?')) {
             seedKeywordInput.value = '';
             currentSuggestions = [];
             addedKeywords = [];
+            apiErrorMessage.textContent = '';
+            clearTimeout(searchTimeout);
             renderSuggestions();
             renderAddedKeywords();
         }
     });
 
-    // --- THAY ĐỔI JS: CHỨC NĂNG NÚT COPY ---
     copyKeywordsBtn.addEventListener('click', () => {
         if (addedKeywords.length > 0) {
-            const keywordsToCopy = addedKeywords.map(kw => kw.text).join('\n'); // Mỗi từ khóa trên một dòng mới
+            const keywordsToCopy = addedKeywords.map(kw => kw.text).join('\n'); 
             navigator.clipboard.writeText(keywordsToCopy)
                 .then(() => {
-                    // Hiển thị thông báo thành công
                     copiedFeedback.classList.add('show');
                     setTimeout(() => {
                         copiedFeedback.classList.remove('show');
-                    }, 2000); // Ẩn sau 2 giây
+                    }, 2000); 
                 })
                 .catch(err => {
                     console.error('Lỗi khi copy từ khóa: ', err);
@@ -503,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    renderAddedKeywords();
+    renderAddedKeywords(); // Initial render
 });
 </script>
 
